@@ -1,8 +1,9 @@
 import React, {Component} from 'react'
-import { FlatList, View, Text, Image, AsyncStorage, TouchableOpacity, StyleSheet} from 'react-native';
+import { FlatList, View, Text, Image, TouchableOpacity, StyleSheet} from 'react-native';
 import {URL} from '../../publics/config'
 import Axios from 'axios'
 import { NavigationEvents } from 'react-navigation'
+import AsyncStorage from '@react-native-community/async-storage';
 class Project extends Component{
   state = {
     project_name : '',
@@ -44,6 +45,7 @@ class Project extends Component{
       .then( async res => {
         if(res.data.status == 200) {
           this.setState({project_name : res.data.data[0].pr_name})
+          await AsyncStorage.setItem('pr_id', "" + res.data.data[0].pr_id)
           await Axios.get(`${this.state.url}/sprint/project/${pr_id}`, {headers : {Authorization : token}})
           .then(async result => {
             this.setState({sprints : result.data.data})
@@ -62,6 +64,7 @@ class Project extends Component{
           if(res.data.data.length != 0) {
             this.setState({pr_id : res.data.data[0].pr_id})
             this.setState({project_name : res.data.data[0].pr_name})
+            await AsyncStorage.setItem('pr_id', "" + res.data.data[0].pr_id)
             await Axios.get(`${this.state.url}/sprint/project/${res.data.data[0].pr_id}`, {headers : {Authorization : token}})
             .then(async result => {
               this.setState({sprints : result.data.data})
@@ -187,47 +190,13 @@ class Project extends Component{
     )
   }
 
-  buttonFooter = () => {
-    return (
-      <View style={styles.footer}>
-        <NavigationEvents onDidFocus={() => this.componentDidMount()}/>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('Project')} style={styles.button} >
-              <View style={styles.icon}>
-              <Image source={require('../../../assets/project01.png')} style={styles.iconImage}/>
-              </View>
-              <Text style={styles.buttonTextOn}>Projects</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('Report')} style={styles.button} >
-              <View style={styles.icon}>
-              <Image source={require('../../../assets/report02.png')} style={styles.iconImage}/>
-              </View>
-              <Text style={styles.buttonText}>Report</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('Team')} style={styles.button} >
-              <View style={styles.icon}>
-              <Image source={require('../../../assets/team02.png')} style={styles.iconImage}/>
-              </View>
-              <Text style={styles.buttonText}>Team</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('Account')} style={styles.button} >
-              <View style={styles.icon}>
-              <Image source={require('../../../assets/account02.png')} style={styles.iconImage}/>
-              </View>
-              <Text style={styles.buttonText}>Account</Text>
-          </TouchableOpacity>
-      </View>
-    )
-  }
-
- 
   render() {
     return(
       <View style={styles.container}>
         <NavigationEvents onDidFocus={() => this.componentDidMount()}/>
-          {this.headerProject()}
+          { this.headerProject() }
           { this.sprintProject() }
           { this.state.canCreateSprint ? this.createSprint() : null }
-          {this.buttonFooter()}
           { this.state.edit ? this.editView() : null}
       </View>
     )
@@ -248,7 +217,7 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       position: 'absolute',
       top: 60,
-      bottom: 80
+      bottom: 0
     },
     logoText : {
       marginVertical: 15,
@@ -296,7 +265,7 @@ const styles = StyleSheet.create({
       textAlign:'center',
     },
     button: {
-      width:100,
+      width:"25%",
       height: 80,
       backgroundColor:'#ffffff',
       paddingVertical: 13,
@@ -320,7 +289,8 @@ const styles = StyleSheet.create({
         position: 'absolute', 
         bottom:0,
         backgroundColor:'#FFFFFF',
-        width: '100%'
+        width: '100%',
+        elevation: 10
     },
     header:{
       flexDirection: 'row', 
@@ -355,16 +325,15 @@ const styles = StyleSheet.create({
       marginVertical : 5
     },
     boardSprint: {
-      marginHorizontal: 5,
       width: '95%',
       height: 90,
       backgroundColor:'#FFFFFF',
-      borderRadius: 20,
+      borderRadius: 10,
       elevation: 10,
       justifyContent: 'center',
       alignItems: 'center',
       marginVertical : 5,
-      marginHorizontal: 10
+      marginHorizontal: "2%"
     },
     TextBoard: {
       color:'#AEAEAE',
@@ -397,7 +366,7 @@ const styles = StyleSheet.create({
     },
     create:{
       position: 'absolute', 
-      bottom: 90,
+      bottom: 10,
       alignItems: 'flex-end',
       right: 10
     },

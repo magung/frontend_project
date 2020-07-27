@@ -1,5 +1,6 @@
 import React, {useEffect} from 'react'
-import { ActivityIndicator, View, AsyncStorage} from 'react-native';
+import { ActivityIndicator, View} from 'react-native';
+import AsyncStorage from '@react-native-community/async-storage';
 const Loading = props => {
   useEffect(()=>{
     AsyncStorage.getItem('token')

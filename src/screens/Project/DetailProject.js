@@ -1,9 +1,11 @@
 import React, {Component} from 'react'
-import { Alert, ScrollView, FlatList, SafeAreaView, View, Text, TextInput, Picker, AsyncStorage, TouchableOpacity, StyleSheet, KeyboardAvoidingView, RefreshControlBase} from 'react-native';
+import { Alert, ScrollView, FlatList, SafeAreaView, View, Text, TextInput, Picker, TouchableOpacity, StyleSheet, KeyboardAvoidingView, RefreshControlBase} from 'react-native';
 import {URL} from '../../publics/config'
 import Axios from 'axios';
 import Toast from 'react-native-root-toast';
-
+import moment from 'moment'
+import DatePicker from 'react-native-datepicker';
+import AsyncStorage from '@react-native-community/async-storage';
 class DetailProject extends Component {
   state = {
     member: '',
@@ -17,7 +19,8 @@ class DetailProject extends Component {
     token: '',
     pr_id: 0,
     canUpdate : false,
-    canDelete : true
+    canDelete : true,
+    deadline: moment().format('YYYY-MM-DD')
   }
 
   componentDidMount = async () => {
@@ -34,7 +37,8 @@ class DetailProject extends Component {
       if(res.data.status == 200) {
         this.setState({
           name : res.data.data[0].pr_name,
-          description : res.data.data[0].pr_description
+          description : res.data.data[0].pr_description,
+          deadline : moment(res.data.data[0].deadline).format('YYYY-MM-DD')
         })
       }
     })
@@ -120,6 +124,7 @@ class DetailProject extends Component {
         hideOnPress: true,
         delay: 0,})
         await AsyncStorage.setItem('pr_id', "" + 0)
+        Alert.alert("Success", 'Success delete project');
         this.props.navigation.navigate("Project")
     })
     .catch(err => {
@@ -130,6 +135,7 @@ class DetailProject extends Component {
         animation: true,
         hideOnPress: true,
         delay: 0,})
+        Alert.alert("Failed", 'Failed delete project');
     })
   }
 
@@ -189,7 +195,7 @@ class DetailProject extends Component {
     this.setState({user_id: selectMembersId})
   }
 
-  editProject = async (name, description, memberID) => {
+  editProject = async (name, description, memberID, deadline) => {
     if(!name){
       Toast.show('name project is required', {
             duration: Toast.durations.LONG,
@@ -198,6 +204,7 @@ class DetailProject extends Component {
             animation: true,
             hideOnPress: true,
             delay: 0,})
+            Alert.alert("Warning", 'name project is required');
     }else if(!description){
       Toast.show('description project is required', {
             duration: Toast.durations.LONG,
@@ -206,6 +213,7 @@ class DetailProject extends Component {
             animation: true,
             hideOnPress: true,
             delay: 0,})
+            Alert.alert("Warning", 'description project is required');
     }else if(memberID.length <= 0){
       Toast.show('members project is required', {
             duration: Toast.durations.LONG,
@@ -214,11 +222,13 @@ class DetailProject extends Component {
             animation: true,
             hideOnPress: true,
             delay: 0,})
+            Alert.alert("Warning", 'members project is required');
     } else {
       const token = this.state.token
       let data = {
         pr_name : name,
-        description : description
+        description : description,
+        deadline : deadline
       }
       let updateProject = await Axios.put(`${this.state.url}/project/${this.state.pr_id}`, data, {headers : {Authorization : token}})
       if(updateProject){
@@ -234,6 +244,7 @@ class DetailProject extends Component {
             animation: true,
             hideOnPress: true,
             delay: 0,})
+            Alert.alert("Success", 'Success update project');
           this.props.navigation.navigate("Project", {pr_id : this.state.pr_id})
         } else {
           Toast.show('Failed update project', {
@@ -243,6 +254,7 @@ class DetailProject extends Component {
             animation: true,
             hideOnPress: true,
             delay: 0,})
+            Alert.alert("Failed", 'failed update project');
         }
       
         
@@ -254,6 +266,7 @@ class DetailProject extends Component {
           animation: true,
           hideOnPress: true,
           delay: 0,})
+          Alert.alert("Failed", 'failed update project');
       }
     }
   }
@@ -268,7 +281,7 @@ class DetailProject extends Component {
       <>
       <View style={styles.listMember}>
         <TouchableOpacity 
-          onPress={()=> this.editProject(this.state.name, this.state.description, this.state.membersId)}
+          onPress={()=> this.editProject(this.state.name, this.state.description, this.state.membersId, this.state.deadline)}
           style={styles.buttonCreate} 
           >
           <Text style={styles.buttonText}>Update</Text>
@@ -296,6 +309,7 @@ class DetailProject extends Component {
           <KeyboardAvoidingView behavior="padding" enabled style={styles.form}>
             <Text style={styles.formText}>Name Project</Text>
             <TextInput
+              editable={this.state.canUpdate ? true : false}
               value={this.state.name}
               style={styles.formInput}
               underlineColorAndroid='rgba(0,0,0,0)'
@@ -305,6 +319,9 @@ class DetailProject extends Component {
               />
             <Text style={styles.formText}>Description</Text>
             <TextInput
+              editable={this.state.canUpdate ? true : false}
+              numberOfLines={1}
+              multiline
               value={this.state.description}
               style={styles.formInput}
               underlineColorAndroid='rgba(0,0,0,0)'
@@ -312,6 +329,19 @@ class DetailProject extends Component {
               placeholderTextColor = "#AEAEAE"
               onChangeText={(description) => this.setState({description})}
               />
+            <Text style={styles.formText}>Deadline</Text>
+            <View style={styles.formInput}>
+              <DatePicker
+                style={{marginTop: 10}}
+                date={this.state.deadline}
+                mode="date"
+                display="spinner"
+                showIcon={false}
+                format="YYYY-MM-DD"
+                TouchableComponent={TouchableOpacity}
+                onDateChange={(date) => this.setState({deadline : date})}
+              />
+            </View>
             <Text style={styles.formText}>Members</Text>
             <View style={this.state.canUpdate ? styles.formInput : styles.formMember}>
               { this.state.canUpdate ?
@@ -430,7 +460,7 @@ const styles = StyleSheet.create({
       elevation: 5,
       justifyContent: 'center',
       alignItems: 'center',
-      marginTop: 10
+      marginVertical: 10
     },
     buttonText:{
       color:'#FFFFFF',

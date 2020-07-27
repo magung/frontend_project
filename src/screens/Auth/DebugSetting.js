@@ -1,7 +1,7 @@
 import React, {Component} from 'react'
-import { View, Text, Image, AsyncStorage, TouchableOpacity, StyleSheet, KeyboardAvoidingView, TextInput} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, KeyboardAvoidingView, TextInput} from 'react-native';
 import {URL} from '../../publics/config'
-
+import AsyncStorage from '@react-native-community/async-storage';
 class Account extends Component {
 
     state = {

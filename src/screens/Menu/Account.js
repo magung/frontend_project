@@ -1,20 +1,92 @@
 import React, {Component} from 'react'
-import { View, Text, Image, AsyncStorage, TouchableOpacity, StyleSheet, KeyboardAvoidingView, TextInput} from 'react-native';
-
-
+import { View, Text, Image, TouchableOpacity, StyleSheet, KeyboardAvoidingView, TextInput, Button} from 'react-native';
+import {URL} from '../../publics/config'
+import Axios from 'axios'
+import { NavigationEvents } from 'react-navigation'
+import AsyncStorage from '@react-native-community/async-storage';
 class Account extends Component {
 
     state = {
-        debug : '',
-        debugUrl : '',
-        edit: false
+        url : URL,
+        token : '',
+        edit: false,
+        name: 'Agung Maulana',
+        email: 'agung@gmail.com',
+        position: 'Vice President',
+        image: null,
+        user_id: 0,
+        filePath : null
+    }
+
+    componentDidMount = async () => {
+        const token = await AsyncStorage.getItem('token');
+        this.setState({token : token})
+        let server_url = await AsyncStorage.getItem('debug');
+        if (server_url) {
+            this.setState({url : server_url})
+        }
+        await Axios.get(this.state.url + "/user/profile", {headers : {Authorization : token}})
+        .then(res => {
+            console.log(res.data.data)
+            this.setState({
+                user_id : res.data.data.user_id,
+                name : res.data.data.name,
+                email: res.data.data.email,
+                position: res.data.data.level,
+                image: res.data.data.image
+            })
+        })
     }
 
     removeItem = async () => {
-        let keys = ['token', 'user_data']
+        let keys = ['token', 'user_data', 'pr_id']
         await AsyncStorage.multiRemove(keys, (err) => {
             this.props.navigation.navigate('Auth')
         })
+    }    
+
+    dataProfile = () => {
+        return(
+            <View style={{width: '90%', height: '80%', position: 'absolute', bottom: 0, backgroundColor: '#FFFFFF', elevation: 10, alignItems: 'center', borderTopLeftRadius: 20, borderTopRightRadius: 20}}>
+                {this.imageProfile()}
+                <View style={{marginTop: 120, backgroundColor: '#FFFFFF', elevation: 10, width: '90%', height: '10%', borderRadius: 10, justifyContent: 'center'}}>
+                    <Text style={{position:'absolute', top: -30, color: '#1E5028', fontWeight: 'bold', fontSize: 20}}>Name</Text>
+                    <Text style={{color: '#1E5028', fontWeight: 'bold', fontSize: 20, marginLeft: 20}}>{this.state.name.length > 20 ? this.state.name.substr(0,20)+'...' : this.state.name}</Text>
+                </View>
+                <View style={{marginTop: 35, backgroundColor: '#FFFFFF', elevation: 10, width: '90%', height: '10%', borderRadius: 10, justifyContent: 'center'}}>
+                    <Text style={{position:'absolute', top: -30, color: '#1E5028', fontWeight: 'bold', fontSize: 20}}>Email</Text>
+                    <Text style={{color: '#1E5028', fontWeight: 'bold', fontSize: 20, marginLeft: 20}}>{this.state.email.length > 20 ? this.state.email.substr(0,20)+'...' : this.state.email}</Text>
+                </View>
+                <View style={{marginTop: 35, backgroundColor: '#FFFFFF', elevation: 10, width: '90%', height: '10%', borderRadius: 10, justifyContent: 'center'}}>
+                    <Text style={{position:'absolute', top: -30, color: '#1E5028', fontWeight: 'bold', fontSize: 20}}>Position</Text>
+                    <Text style={{color: '#1E5028', fontWeight: 'bold', fontSize: 20, marginLeft: 20}}>{this.state.position.length > 20 ? this.state.position.substr(0,20)+'...' : this.state.position}</Text>
+                </View>
+            </View>
+        )
+    }
+
+    imageProfile = () => {
+        return(
+            <View style={{position: 'absolute', top: -100}}>
+                <NavigationEvents onDidFocus={() => this.componentDidMount()}/>
+                <TouchableOpacity style={{width: 200, height: 200, borderRadius: 100}} onPress={() => this.props.navigation.navigate('ImageProfile', {user_id : this.state.user_id, image: this.state.image})}>
+                    {this.state.image === null ?
+                    <Image source={require('../../../assets/profile01.png')} style={{resizeMode: 'cover', width: 200, height:200, borderRadius: 100}} />
+                    :
+                    <Image source={{uri: this.state.url + "/user/image/" + this.state.image}} style={{resizeMode: 'cover', width: 200, height:200, borderRadius: 100}} />
+                    }
+                </TouchableOpacity>
+            </View>
+        )
+    }
+
+    viewAcount = () => {
+        return (
+            <View style={{width: '100%', position: 'absolute', top: 60, bottom: 80, minHeight: '100%', backgroundColor: '#FFFFFF', alignItems: 'center'}}>
+          
+                {this.dataProfile()}
+            </View>
+        )
     }
 
     editButton = () => {
@@ -48,44 +120,15 @@ class Account extends Component {
         )
     }
 
-    buttonFooter = () => {
-        return (
-            <View style={styles.footer}>
-                <TouchableOpacity onPress={() => this.props.navigation.navigate('Project')} style={styles.button} >
-                    <View style={styles.icon}>
-                    <Image source={require('../../../assets/project02.png')} style={styles.iconImage}/>
-                    </View>
-                    <Text style={styles.buttonText}>Projects</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => this.props.navigation.navigate('Report')} style={styles.button} >
-                    <View style={styles.icon}>
-                    <Image source={require('../../../assets/report02.png')} style={styles.iconImage}/>
-                    </View>
-                    <Text style={styles.buttonText}>Report</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => this.props.navigation.navigate('Team')} style={styles.button} >
-                    <View style={styles.icon}>
-                    <Image source={require('../../../assets/team02.png')} style={styles.iconImage}/>
-                    </View>
-                    <Text style={styles.buttonText}>Team</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => this.props.navigation.navigate('Account')} style={styles.button} >
-                    <View style={styles.icon}>
-                    <Image source={require('../../../assets/account01.png')} style={styles.iconImage}/>
-                    </View>
-                    <Text style={styles.buttonTextOn}>Account</Text>
-                </TouchableOpacity>
-            </View>
-        )
-      }
+    
 
     render() {
 
         return(
           <View style={styles.container}>
                 {this.header()}
+                {this.viewAcount()}
                 {this.state.edit ? this.editView() : null}
-                {this.buttonFooter()}
           </View>
         )
     }
@@ -98,7 +141,7 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     button: {
-        width:100,
+        width:"25%",
         height: 80,
         backgroundColor:'#ffffff',
         paddingVertical: 13,
@@ -138,7 +181,8 @@ const styles = StyleSheet.create({
         position: 'absolute', 
         bottom:0,
         backgroundColor:'#FFFFFF',
-        width: '100%'
+        width: '100%',
+        elevation: 10
     },
     icon: {
         height: 50,

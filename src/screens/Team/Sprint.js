@@ -5,12 +5,33 @@ import Axios from 'axios'
 import { NavigationEvents } from 'react-navigation'
 import Toast from 'react-native-root-toast';
 import AsyncStorage from '@react-native-community/async-storage';
-class Team extends Component{
+class TeamSprint extends Component{
   state = {
     url : URL,
     token : '',
-    projects : {},
-    canCreate : false
+    sprints : [
+        {
+            sp_id: 1,
+            sp_name: "Sprint 1",
+            p_deployed: 100,
+            sp_description: "sprint 1 "
+        },
+        {
+            sp_id: 2,
+            sp_name: "Sprint 2",
+            p_deployed: 80,
+            sp_description: "sprint 2 untuk project web"
+        },
+        {
+            sp_id: 3,
+            sp_name: "Sprint 3",
+            p_deployed: 90,
+            sp_description: "sprint 3 untuk project \nmobile"
+        }
+    ],
+    canCreate : false,
+    project_name: "Project 1",
+    pr_id: 0
   }
   
   componentDidMount = async () => {
@@ -25,57 +46,68 @@ class Team extends Component{
     if (server_url) {
       this.setState({url : server_url})
     }
-    await Axios.get(`${this.state.url}/project`, {headers : {Authorization : token}})
-    .then( async res => {
-      this.setState({projects : res.data.data})
-    })
-    .catch( err => {
-      Toast.show('Failed get projects', {
-        duration: Toast.durations.LONG,
-        position: 0,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-        delay: 0,})
+    let pr_id = await AsyncStorage.getItem('pr_id');
+    if(pr_id){
+      this.setState({pr_id : pr_id})
+    }
+    let pr_name = await AsyncStorage.getItem('pr_name');
+    if(pr_name){
+      this.setState({project_name : pr_name})
+    }
+
+    await Axios.get(`${this.state.url}/sprint/progress/${this.state.pr_id}`, {headers : {Authorization : token}})
+    .then(async result => {
+      this.setState({sprints : result.data.data})
     })
   }
 
-  isProject = () => {
+  teamSprint = () => {
     return(
-      <View style={styles.containerProject}>
+      <View style={styles.containerSprint}>
         <FlatList
           style = {{width : "100%"}}
-          data = {this.state.projects}
-          keyExtractor={({pr_id}, index) => pr_id}
+          data = {this.state.sprints}
+          keyExtractor={({sp_id}, index) => sp_id}
           renderItem = {({item}) =>
-          <TouchableOpacity style={styles.board} key={item.pr_id} 
-            onPress={() => { this.handleSubmit(item.pr_id, item.pr_name)} } >
-            <Text style={styles.TextBoardProject}>{item.pr_name.length > 20 ? item.pr_name.substr(0,20)+'...' : item.pr_name}</Text>
-            <Text style={styles.TextBoardProjectDesc} ellipsizeMode='tail' numberOfLines={2}>{item.pr_description}</Text>
+          <TouchableOpacity style={styles.board} key={item.sp_id} 
+            onPress={() => { this.handleSubmit(item.sp_id, item.sp_name)} } >
+            <Text style={styles.TextBoardSprint}>{item.sp_name.length > 20 ? item.sp_name.substr(0,20)+'...' : item.sp_name}</Text>
+            <Text style={styles.TextBoardSprintDesc} ellipsizeMode='tail' numberOfLines={2}>{item.sp_description.length > 30 ? item.sp_description.substr(0,30)+'...' : item.sp_description}</Text>
+            <View style={{position:'absolute', right: 20, top: '20%', alignItems: 'center'}}>
+                <Text style={{fontSize:30, fontWeight: 'bold', color: '#1E5028'}}>{item.p_deployed !== null ? item.p_deployed : 0} %</Text>
+                <View style={{width:100, height:5, backgroundColor: '#AEAEAE'}}>
+                    <View style={{width: (item.p_deployed !== null ? item.p_deployed : 0), height:5, backgroundColor: '#1E5028'}}></View>
+                </View>
+            </View>
           </TouchableOpacity>
           }
         />
       </View>
     )
   }
-  nothingProject = () => {
+  nothingSprint = () => {
     return (
       <TouchableOpacity style={styles.boardNo} >
-        <Text style={styles.TextBoard}>No Project was created yet</Text>
+        <Text style={styles.TextBoard}>No Sprint was created yet</Text>
       </TouchableOpacity>
     )
   }
 
-  handleSubmit = async (pr_id, pr_name) => {
-    await AsyncStorage.setItem('pr_id', "" + pr_id)
-    await AsyncStorage.setItem('pr_name', "" + pr_name)
-    this.props.navigation.navigate('TeamSprint') 
+  handleSubmit = async (sp_id, sp_name) => {
+    await AsyncStorage.setItem('sp_id', "" + sp_id)
+    await AsyncStorage.setItem('sp_name', "" + sp_name)
+    this.props.navigation.navigate('TeamTask') 
   }
 
   header = () => {
     return (
       <View style={styles.header}>
         <Text style={styles.headerName}>Team</Text>
+        <TouchableOpacity 
+            style={{width: 200, height: 35,  borderRadius: 10, borderWidth: 1, borderColor: '#1E5028', position: 'absolute', right: 10, alignItems: 'center'}}
+            onPress={() => this.props.navigation.goBack()}>
+             <Text style={styles.projectName}>{this.state.project_name.length > 10 ? this.state.project_name.substr(0,10)+'...' : this.state.project_name}</Text>
+        </TouchableOpacity>
       </View>
     )
   }
@@ -88,51 +120,19 @@ class Team extends Component{
     )
   }
 
-  buttonFooter = () => {
-    return (
-      <View style={styles.footer}>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('Project')} style={styles.button} >
-              <View style={styles.icon}>
-              <Image source={require('../../../assets/project02.png')} style={styles.iconImage}/>
-              </View>
-              <Text style={styles.buttonText}>Projects</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('Report')} style={styles.button} >
-              <View style={styles.icon}>
-              <Image source={require('../../../assets/report02.png')} style={styles.iconImage}/>
-              </View>
-              <Text style={styles.buttonText}>Report</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('Team')} style={styles.button} >
-              <View style={styles.icon}>
-              <Image source={require('../../../assets/team01.png')} style={styles.iconImage}/>
-              </View>
-              <Text style={styles.buttonTextOn}>Team</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('Account')} style={styles.button} >
-              <View style={styles.icon}>
-              <Image source={require('../../../assets/account02.png')} style={styles.iconImage}/>
-              </View>
-              <Text style={styles.buttonText}>Account</Text>
-          </TouchableOpacity>
-      </View>
-    )
-  }
-
  
   render() {
     return(
       <View style={styles.container}>
         <NavigationEvents onDidFocus={() => this.componentDidMount()}/>
           {this.header()}
-          { this.state.projects.length ? this.isProject() :  this.nothingProject()}
-          {/* {this.buttonFooter()} */}
+          {this.state.sprints.length !== 0 ? this.teamSprint() : this.nothingSprint()}
       </View>
     )
 
   }
 }
-export default Team
+export default TeamSprint
 
 
 
@@ -141,11 +141,10 @@ const styles = StyleSheet.create({
       flexGrow: 1,
       alignItems: 'center'
     },
-    containerProject : {
+    containerSprint : {
       width : '100%',
       position: 'absolute',
-      top: 60,
-      bottom: 0
+      top: 60
     },
     headerName: {
       color:'#1E5028',
@@ -153,6 +152,12 @@ const styles = StyleSheet.create({
       fontWeight:'bold',
       textAlign:'center',
       marginLeft: 20
+    },
+    projectName: {
+        color:'#1E5028',
+        fontSize:25,
+        fontWeight:'bold',
+        textAlign:'center'
     },
     header:{
       flexDirection: 'row', 
@@ -183,8 +188,7 @@ const styles = StyleSheet.create({
       position: 'absolute', 
       bottom:0,
       backgroundColor:'#FFFFFF',
-      width: '100%',
-      elevation: 10
+      width: '100%'
     },
     button: {
       width:"25%",
@@ -225,16 +229,17 @@ const styles = StyleSheet.create({
       marginHorizontal: 10,
       borderRadius: 10,
       paddingHorizontal: 10,
-      paddingVertical:10
+      paddingVertical:'2%'
     },
     boardNo: {
-      width: '100%',
+      width: '95%',
       height: 90,
       backgroundColor:'#FFFFFF',
-      borderRadius: 20,
+      borderRadius: 10,
       justifyContent: 'center',
       alignItems: 'center',
       marginVertical : 5,
+      marginHorizontal: '2%',
       elevation: 4
     },
     TextBoard: {
@@ -243,13 +248,13 @@ const styles = StyleSheet.create({
       fontWeight:'bold',
       textAlign:'center'
     },
-    TextBoardProject: {
+    TextBoardSprint: {
       color:'#1E5028',
       fontSize:20,
       fontWeight:'bold',
       textAlign:'center'
     },
-    TextBoardProjectDesc:{
+    TextBoardSprintDesc:{
       color:'#1E5028',
       fontSize:14,
       fontWeight:'bold',

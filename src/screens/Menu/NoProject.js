@@ -1,11 +1,13 @@
 import React, {Component} from 'react'
-import { FlatList, View, Text, Image, AsyncStorage, TouchableOpacity, StyleSheet} from 'react-native';
+import { FlatList, View, Text, Image, TouchableOpacity, StyleSheet} from 'react-native';
 import {URL} from '../../publics/config'
 import Axios from 'axios'
 import { NavigationEvents } from 'react-navigation'
+import AsyncStorage from '@react-native-community/async-storage';
 class Project extends Component{
   state = {
-    canCreateProject : false
+    canCreateProject : false,
+    edit: false,
   }
   
   componentDidMount = async () => {
@@ -23,13 +25,13 @@ class Project extends Component{
 
   }
 
-  nothingProject = () => {
-    return (
-      <TouchableOpacity style={styles.board} >
-        <Text style={styles.TextBoard}>No Project was created yet</Text>
-      </TouchableOpacity>  
-    )
+  removeItem = async () => {
+    let keys = ['token', 'user_data', 'pr_id', 'debug']
+    await AsyncStorage.multiRemove(keys, (err) => {
+        this.props.navigation.navigate('Auth')
+    })
   }
+
 
   createProject = () => {
     return(
@@ -47,11 +49,14 @@ class Project extends Component{
     )
   }
 
+  
 
   headerProject = () => {
     return (
       <View style={styles.header}>
         {this.state.canCreateProject ? this.createProject() : this.selectProject()}
+        {this.editButton()}
+        {this.state.edit ? this.editView() : null}
       </View>
     )
   }
@@ -88,14 +93,42 @@ class Project extends Component{
     )
   }
 
+  editButton = () => {
+    return (
+        <TouchableOpacity style={styles.buttonEdit} onPress={() => {this.state.edit ? this.setState({edit:false}) : this.setState({edit:true})} }>
+          <Image source={require('../../../assets/edit.png')} style={styles.iconEdit} />
+        </TouchableOpacity>
+    )
+  }
+
+
+  nothingProject = () => {
+    return (
+      <View style={styles.board} >
+        <Text style={styles.TextBoard}>No Project was created yet</Text>
+      </View>  
+    )
+  }
  
+
+  editView = () => {
+    return (
+        <View style={styles.editView}>
+            <TouchableOpacity onPress={() => this.removeItem()} style={styles.buttonLogout} >  
+                <Text style={styles.buttonTextLoout}>Logout</Text>
+            </TouchableOpacity>
+        </View>
+    )
+  }
+
   render() {
     return(
       <View style={styles.container}>
         <NavigationEvents onDidFocus={() => this.componentDidMount()}/>
           {this.headerProject()}
           {this.nothingProject()}
-          {this.buttonFooter()}
+          
+          {/* {this.buttonFooter()} */}
       </View>
     )
 
@@ -163,17 +196,16 @@ const styles = StyleSheet.create({
       textAlign:'center',
     },
     button: {
-      width:100,
+      width:"25%",
       height: 80,
       backgroundColor:'#ffffff',
       paddingVertical: 13,
     },
-    buttonTextOn: {
-        color:'#1E5028',
-        fontSize:14,
-        fontWeight:'bold',
-        textAlign:'center',
-        bottom:3
+    buttonTextLoout: {
+      fontSize:12,
+      fontWeight:'bold',
+      color:'#FFFFFF',
+      textAlign:'center'
     },
     buttonText: {
       fontSize:12,
@@ -181,13 +213,6 @@ const styles = StyleSheet.create({
       color:'#AEAEAE',
       textAlign:'center',
       bottom:3
-    },
-    footer:{
-        flexDirection: 'row', 
-        position: 'absolute', 
-        bottom:0,
-        backgroundColor:'#FFFFFF',
-        width: '100%'
     },
     header:{
       flexDirection: 'row', 
@@ -212,14 +237,15 @@ const styles = StyleSheet.create({
         resizeMode: 'contain'
     },
     board: {
-      width: '95%',
-      height: 90,
+      width: '60%',
+      height: 40,
       backgroundColor:'#FFFFFF',
-      borderRadius: 20,
+      borderRadius: 10,
       elevation: 10,
       justifyContent: 'center',
       alignItems: 'center',
-      marginVertical : 5
+      position: 'absolute',
+      top: 70
     },
     boardSprint: {
       marginHorizontal: 5,
@@ -255,7 +281,9 @@ const styles = StyleSheet.create({
     buttonEdit: {
       height: 40,
       width: 40,
-      borderRadius: 20
+      borderRadius: 20,
+      right: 10,
+      position: 'absolute'
     },
     iconEdit: {
       height: 40,
@@ -285,11 +313,15 @@ const styles = StyleSheet.create({
       right: 10
     },
     editView:{
-      position: 'absolute',
-      top: 60,
-      left:10,
-      
-    }
+      top: 10,
+      right: 60,
+      position: "absolute"
+    },
+    buttonLogout:{
+      width:100,
+      backgroundColor:'#892020',
+      paddingVertical: 13,
+    },
   
   });
   

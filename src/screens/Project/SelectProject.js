@@ -1,9 +1,10 @@
 import React, {Component} from 'react'
-import { View, Text, AsyncStorage, TouchableOpacity, StyleSheet, FlatList} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList} from 'react-native';
 import {URL} from "../../publics/config";
 import { NavigationEvents } from 'react-navigation'
 import Axios from 'axios';
 import Toast from 'react-native-root-toast';
+import AsyncStorage from '@react-native-community/async-storage';
 
 class SelectProject extends Component{
   state = {
@@ -49,7 +50,7 @@ class SelectProject extends Component{
 
   handleSubmit = async (pr_id) => {
     await AsyncStorage.setItem('pr_id', "" + pr_id)
-    this.props.navigation.navigate('Project') 
+    this.props.navigation.goBack()
   }
 
   isProject = () => {

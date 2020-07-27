@@ -1,16 +1,19 @@
 import React, {Component} from 'react'
-import { ScrollView, FlatList, SafeAreaView, View, Text, TextInput, Picker, AsyncStorage, TouchableOpacity, StyleSheet, KeyboardAvoidingView, RefreshControlBase} from 'react-native';
+import { ScrollView, FlatList,Alert, SafeAreaView, View, Text, TextInput, Picker, TouchableOpacity, StyleSheet, KeyboardAvoidingView, RefreshControlBase} from 'react-native';
 import {URL} from '../../publics/config'
 import Axios from 'axios';
 import Toast from 'react-native-root-toast';
-
+import DatePicker from 'react-native-datepicker';
+import moment from 'moment';
+import AsyncStorage from '@react-native-community/async-storage';
 class CreateSprint extends Component {
   state = {
     name: '',
     description: '',
     url: URL,
     token: '',
-    pr_id: 0
+    pr_id: 0,
+    deadline: moment().format('YYYY-MM-DD')
   }
 
   componentDidMount = async () => {
@@ -25,7 +28,7 @@ class CreateSprint extends Component {
   }
 
 
-  createSprint = async (name, description) => {
+  createSprint = async (name, description, deadline) => {
     if(!name){
       Toast.show('name sprint is required', {
             duration: Toast.durations.LONG,
@@ -34,6 +37,7 @@ class CreateSprint extends Component {
             animation: true,
             hideOnPress: true,
             delay: 0,})
+            Alert.alert("Warning", 'name sprint is required');
     }else if(!description){
       Toast.show('description sprint is required', {
             duration: Toast.durations.LONG,
@@ -42,12 +46,14 @@ class CreateSprint extends Component {
             animation: true,
             hideOnPress: true,
             delay: 0,})
+            Alert.alert("Warning", 'description sprint is required');
     } else {
       const token = this.state.token
       let data = {
         pr_id: this.state.pr_id,
         sprint_name : name,
-        description : description
+        description : description,
+        deadline : deadline
       }
       await Axios.post(`${this.state.url}/sprint`, data, {headers : {Authorization : token}})
       .then( async result => {
@@ -58,6 +64,7 @@ class CreateSprint extends Component {
           animation: true,
           hideOnPress: true,
           delay: 0,})
+          Alert.alert("Success", 'Success create sprint');
         this.props.navigation.goBack()
        
       })
@@ -69,6 +76,7 @@ class CreateSprint extends Component {
           animation: true,
           hideOnPress: true,
           delay: 0,})
+          Alert.alert("Failed", 'Failed create sprint');
       })
     }
   }
@@ -88,19 +96,34 @@ class CreateSprint extends Component {
               />
             <Text style={styles.formText}>Description</Text>
             <TextInput
+              numberOfLines={1}
+              multiline
               style={styles.formInput}
               underlineColorAndroid='rgba(0,0,0,0)'
               placeholder="enter description sprint"
               placeholderTextColor = "#AEAEAE"
               onChangeText={(description) => this.setState({description})}
               />
+            <Text style={styles.formText}>Deadline</Text>
+            <View style={styles.formInput}>
+              <DatePicker
+                style={{marginTop: 10}}
+                date={this.state.deadline}
+                mode="date"
+                display="spinner"
+                showIcon={false}
+                format="YYYY-MM-DD"
+                TouchableComponent={TouchableOpacity}
+                onDateChange={(date) => this.setState({deadline : date})}
+              />
+            </View>
             <View style={styles.listMember}>
               <TouchableOpacity 
-                onPress={()=> this.createSprint(this.state.name, this.state.description)}
+                onPress={()=> this.createSprint(this.state.name, this.state.description, this.state.deadline)}
                 style={styles.buttonCreate} 
                 >
-                <Text style={styles.buttonText}>Create</Text>
-              </TouchableOpacity>
+              <Text style={styles.buttonText}>Create</Text>
+            </TouchableOpacity>
             </View>
           </KeyboardAvoidingView>
       </SafeAreaView>

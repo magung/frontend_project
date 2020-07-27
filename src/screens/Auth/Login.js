@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import Toast from 'react-native-root-toast';
 import Axios from 'axios';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, AsyncStorage, Image, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Image, ActivityIndicator } from 'react-native';
 import {URL} from '../../publics/config';
-
+import AsyncStorage from '@react-native-community/async-storage';
 class Login extends Component {
   state = {
     email : '',
@@ -13,21 +13,31 @@ class Login extends Component {
   
   handleSubmit = async (email, password) => {
     if(!email){
-      Toast.show('Email is required', {
-            duration: Toast.durations.LONG,
-            position: 0,
-            shadow: true,
-            animation: true,
-            hideOnPress: true,
-            delay: 0,})
+      Alert.alert('Warning', 'Email is required',
+        [
+          {text: 'OK'},
+        ],
+        {cancelable: false},)
+      // Toast.show('Email is required', {
+      //       duration: Toast.durations.LONG,
+      //       position: 0,
+      //       shadow: true,
+      //       animation: true,
+      //       hideOnPress: true,
+      //       delay: 0,})
     } else if(!password){
-      Toast.show('Password is required', {
-            duration: Toast.durations.LONG,
-            position: 0,
-            shadow: true,
-            animation: true,
-            hideOnPress: true,
-            delay: 0,})
+      Alert.alert('Warning', 'Password is required',
+        [
+          {text: 'OK'},
+        ],
+        {cancelable: false},)
+      // Toast.show('Password is required', {
+      //       duration: Toast.durations.LONG,
+      //       position: 0,
+      //       shadow: true,
+      //       animation: true,
+      //       hideOnPress: true,
+      //       delay: 0,})
     } else {
       this.setState({loggedIn : true})
       const data = {
@@ -39,8 +49,8 @@ class Login extends Component {
       if (urldebug) {
         url = urldebug
       }
+      
       await Axios.post(`${url}/user/login`, data)
-      // await this.props.dispatch(login(data))
           .then(async res => {
                 // console.log(res)
                 if(res.data.status == 200) {
@@ -54,31 +64,42 @@ class Login extends Component {
                   ]
                   await AsyncStorage.multiSet(setdata, (err) => {
                     this.setState({loggedIn : false})
-                    Toast.show('Success to login', {
-                      duration: Toast.durations.LONG,
-                      position: 0,
-                      shadow: true,
-                      animation: true,
-                      hideOnPress: true,
-                      delay: 0,})
+                    Alert.alert('Success', 'success login',
+                      [
+                        {text: 'OK'},
+                      ],
+                      {cancelable: false},)
+                    // Toast.show('Success to login', {
+                    //   duration: Toast.durations.LONG,
+                    //   position: 0,
+                    //   shadow: true,
+                    //   animation: true,
+                    //   hideOnPress: true,
+                    //   delay: 0,})
                       this.props.navigation.navigate('Project')
                   })
 
                 } else {
                   this.setState({loggedIn : false})
-                  Toast.show('Email or Password is wrong', {
-                    duration: Toast.durations.LONG,
-                    position: 0,
-                    shadow: true,
-                    animation: true,
-                    hideOnPress: true,
-                    delay: 0,})
+                  Alert.alert('Failed', 'Email or Password is wrong',
+                    [
+                      {text: 'OK'},
+                    ],
+                    {cancelable: false},)
+                  // Toast.show('Email or Password is wrong', {
+                  //   duration: Toast.durations.LONG,
+                  //   position: 0,
+                  //   shadow: true,
+                  //   animation: true,
+                  //   hideOnPress: true,
+                  //   delay: 0,})
                 }
 
           })
-          .catch(function (error) {
+          .catch(function (err) {
+            console.log(err)
             this.setState({loggedIn : false})
-              Alert.alert('Failed Login', 'Server Not Found',
+              Alert.alert('Failed Login', 'server not connection',
               [
                 {text: 'OK'},
               ],
@@ -160,7 +181,7 @@ const styles = StyleSheet.create({
         height:700
     },
     box:{
-        marginLeft: 10,
+        marginHorizontal: "2%",
         marginVertical: 13
     },
     inputBox: {

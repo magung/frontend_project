@@ -1,9 +1,11 @@
 import React, {Component} from 'react'
-import { ScrollView, FlatList, SafeAreaView, View, Text, TextInput, Picker, AsyncStorage, TouchableOpacity, StyleSheet, KeyboardAvoidingView, RefreshControlBase} from 'react-native';
+import { ScrollView, FlatList, SafeAreaView, View, Text, TextInput, Picker, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Alert} from 'react-native';
 import {URL} from '../../publics/config'
 import Axios from 'axios';
 import Toast from 'react-native-root-toast';
-
+import DatePicker from 'react-native-datepicker'
+import moment from 'moment';
+import AsyncStorage from '@react-native-community/async-storage';
 class CreateProject extends Component {
   state = {
     member: '',
@@ -14,7 +16,8 @@ class CreateProject extends Component {
     name: '',
     description: '',
     url: URL,
-    token: ''
+    token: '',
+    deadline: moment().format('YYYY-MM-DD')
   }
 
   componentDidMount = async () => {
@@ -91,7 +94,7 @@ class CreateProject extends Component {
     this.setState({user_id: selectMembersId})
   }
 
-  createProject = async (name, description, memberID) => {
+  createProject = async (name, description, memberID, deadline) => {
     if(!name){
       Toast.show('name project is required', {
             duration: Toast.durations.LONG,
@@ -100,6 +103,7 @@ class CreateProject extends Component {
             animation: true,
             hideOnPress: true,
             delay: 0,})
+      Alert.alert("Warning", 'name project is required');
     }else if(!description){
       Toast.show('description project is required', {
             duration: Toast.durations.LONG,
@@ -108,6 +112,7 @@ class CreateProject extends Component {
             animation: true,
             hideOnPress: true,
             delay: 0,})
+      Alert.alert("Warning", 'description project is required');
     }else if(memberID.length <= 0){
       Toast.show('members project is required', {
             duration: Toast.durations.LONG,
@@ -116,11 +121,13 @@ class CreateProject extends Component {
             animation: true,
             hideOnPress: true,
             delay: 0,})
+            Alert.alert("Warning", 'members project is required');
     } else {
       const token = this.state.token
       let data = {
         project_name : name,
-        description : description
+        description : description,
+        deadline : deadline
       }
       await Axios.post(`${this.state.url}/project`, data, {headers : {Authorization : token}})
       .then( async result => {
@@ -137,6 +144,7 @@ class CreateProject extends Component {
             animation: true,
             hideOnPress: true,
             delay: 0,})
+            Alert.alert("Success", 'Success create project');
           this.props.navigation.navigate('SelectProject')
         })
         .catch( err => {
@@ -147,6 +155,7 @@ class CreateProject extends Component {
             animation: true,
             hideOnPress: true,
             delay: 0,})
+            Alert.alert("Failed", 'Failed create project');
         })
       })
       .catch( err => {
@@ -157,6 +166,7 @@ class CreateProject extends Component {
           animation: true,
           hideOnPress: true,
           delay: 0,})
+          Alert.alert("Failed", 'Failed create project');
       })
     }
   }
@@ -168,6 +178,7 @@ class CreateProject extends Component {
 
   render(){
     return(
+      <ScrollView>
       <SafeAreaView style={styles.container}>
           <KeyboardAvoidingView behavior="padding" enabled style={styles.form}>
             <Text style={styles.formText}>Name Project</Text>
@@ -180,12 +191,29 @@ class CreateProject extends Component {
               />
             <Text style={styles.formText}>Description</Text>
             <TextInput
+              numberOfLines={1}
+              multiline
               style={styles.formInput}
               underlineColorAndroid='rgba(0,0,0,0)'
               placeholder="enter description project"
               placeholderTextColor = "#AEAEAE"
               onChangeText={(description) => this.setState({description})}
               />
+
+            <Text style={styles.formText}>Deadline</Text>
+            <View style={styles.formInput}>
+              <DatePicker
+                style={{marginTop: 10}}
+                date={this.state.deadline}
+                mode="date"
+                display="spinner"
+                showIcon={false}
+                format="YYYY-MM-DD"
+                TouchableComponent={TouchableOpacity}
+                onDateChange={(date) => this.setState({deadline : date})}
+              />
+            </View>
+
             <Text style={styles.formText}>Members</Text>
             <View style={styles.formInput}>
               <Picker
@@ -218,7 +246,7 @@ class CreateProject extends Component {
             </View>
             <View style={styles.listMember}>
               <TouchableOpacity 
-                onPress={()=> this.createProject(this.state.name, this.state.description, this.state.membersId)}
+                onPress={()=> this.createProject(this.state.name, this.state.description, this.state.membersId, this.state.deadline)}
                 style={styles.buttonCreate} 
                 >
                 <Text style={styles.buttonText}>Create</Text>
@@ -226,6 +254,7 @@ class CreateProject extends Component {
             </View>
           </KeyboardAvoidingView>
       </SafeAreaView>
+      </ScrollView>
     )
   }
 }
@@ -287,7 +316,7 @@ const styles = StyleSheet.create({
       elevation: 5,
       justifyContent: 'center',
       alignItems: 'center',
-      marginTop: 10
+      marginVertical: 10
     },
     buttonText:{
       color:'#FFFFFF',

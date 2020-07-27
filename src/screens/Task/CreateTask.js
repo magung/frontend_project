@@ -1,9 +1,11 @@
 import React, {Component} from 'react'
-import { ScrollView, FlatList, SafeAreaView, View, Text, TextInput, Picker, AsyncStorage, TouchableOpacity, StyleSheet, KeyboardAvoidingView, RefreshControlBase} from 'react-native';
+import { ScrollView, FlatList, SafeAreaView, View, Text, TextInput, Picker, TouchableOpacity, StyleSheet, KeyboardAvoidingView, RefreshControlBase} from 'react-native';
 import {URL} from '../../publics/config'
 import Axios from 'axios';
 import Toast from 'react-native-root-toast';
 import DatePicker from 'react-native-datepicker'
+import moment from 'moment';
+import AsyncStorage from '@react-native-community/async-storage';
 
 class CreateTask extends Component {
   state = {
@@ -15,7 +17,7 @@ class CreateTask extends Component {
     type_id: 0,
     priority_id: 0,
     status_id: 0,
-    deadline: new Date(),
+    deadline: moment().format('YYYY-MM-DD'),
     url: URL,
     token: '',
     pr_id: 0,
@@ -35,6 +37,9 @@ class CreateTask extends Component {
     if (urldebug) {
       this.setState({url : urldebug})
     }
+    let user_data = await AsyncStorage.getItem('user_data');
+    user_data = JSON.parse(user_data)
+    this.setState({request_by: user_data.user_id})
     let pr_id = await AsyncStorage.getItem('pr_id');
     this.setState({pr_id})
     let sp_id = this.props.navigation.getParam('sp_id');
@@ -89,15 +94,15 @@ class CreateTask extends Component {
     let label_id= this.state.label_id || 0
     let type_id= this.state.type_id || 0
     let priority_id= this.state.priority_id || 0
-    let status_id= this.state.status_id || 0
+    let status_id= 1
 
     let msg = ''
-    msg = status_id == 0 ? 'Status is Requered' : msg
+    // msg = status_id == 0 ? 'Status is Requered' : msg
     msg = priority_id == 0 ? 'Priority is Requered' : msg
     msg = label_id == 0 ? 'Label is Requered' : msg
     msg = type_id == 0 ? 'Type is Requered' : msg
     msg = owned_by == 0 ? 'Owned By is Requered' : msg
-    msg = request_by == 0 ? 'Request By is Requered' : msg
+    // msg = request_by == 0 ? 'Request By is Requered' : msg
     msg = description == '' ? 'Task Description is Requered' : msg
     msg = name == '' ? 'Task Name is Requered' : msg
 
@@ -110,6 +115,7 @@ class CreateTask extends Component {
         hideOnPress: true,
         delay: 0,})
     } else {
+      // let dateP = this.state.deadline.toString()
       let data = {
         sp_id : this.state.sp_id,
         pr_id : this.state.pr_id,
@@ -123,7 +129,7 @@ class CreateTask extends Component {
         status_id: status_id,
         deadline : this.state.deadline
       }
-       // insert task
+      // insert task
       await Axios.post(this.state.url + "/task", data, {headers : {Authorization : this.state.token}})
       .then(res => {
         msg = "success insert data task"
@@ -156,7 +162,7 @@ class CreateTask extends Component {
     return(
       <ScrollView>
       <SafeAreaView style={styles.container}>
-          <KeyboardAvoidingView behavior="padding" enabled style={styles.form}>
+          <View style={styles.form}>
             <Text style={styles.formText}>Task Name</Text>
             <TextInput
               style={styles.formInput}
@@ -167,13 +173,15 @@ class CreateTask extends Component {
               />
             <Text style={styles.formText}>Description</Text>
             <TextInput
+              numberOfLines={1}
+              multiline
               style={styles.formInput}
               underlineColorAndroid='rgba(0,0,0,0)'
               placeholder="Enter Description of Task"
               placeholderTextColor = "#AEAEAE"
               onChangeText={(description) => this.setState({description})}
               />
-            <Text style={styles.formText}>Request By</Text>
+            {/* <Text style={styles.formText}>Request By</Text>
             <View style={styles.formInput}>
               <Picker
                 selectedValue={this.state.request_by}
@@ -189,7 +197,7 @@ class CreateTask extends Component {
                   })
                 }
               </Picker>
-            </View>
+            </View> */}
             <Text style={styles.formText}>Owned By</Text>
             <View style={styles.formInput}>
               <Picker
@@ -262,7 +270,7 @@ class CreateTask extends Component {
               </Picker>
             </View>
 
-            <Text style={styles.formText}>Status</Text>
+            {/* <Text style={styles.formText}>Status</Text>
             <View style={styles.formInput}>
               <Picker
                 selectedValue={this.state.status_id}
@@ -278,7 +286,7 @@ class CreateTask extends Component {
                   })
                 }
               </Picker>
-            </View>
+            </View> */}
 
             <Text style={styles.formText}>Deadline</Text>
             <View style={styles.formInput}>
@@ -288,6 +296,7 @@ class CreateTask extends Component {
                 mode="date"
                 display="spinner"
                 showIcon={false}
+                format="YYYY-MM-DD"
                 TouchableComponent={TouchableOpacity}
                 onDateChange={(date) => this.setState({deadline : date})}
               />
@@ -301,7 +310,7 @@ class CreateTask extends Component {
                 <Text style={styles.buttonText}>Create</Text>
               </TouchableOpacity>
             </View>
-          </KeyboardAvoidingView>
+          </View>
       </SafeAreaView>
       </ScrollView>
     )

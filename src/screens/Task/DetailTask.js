@@ -1,10 +1,11 @@
 import React, {Component} from 'react'
-import { ScrollView, FlatList, SafeAreaView, View, Text, TextInput, Picker, AsyncStorage, TouchableOpacity, StyleSheet, KeyboardAvoidingView, RefreshControlBase} from 'react-native';
+import { ScrollView, Alert, FlatList, SafeAreaView, View, Text, TextInput, Picker, TouchableOpacity, StyleSheet, KeyboardAvoidingView, RefreshControlBase} from 'react-native';
 import {URL} from '../../publics/config'
 import Axios from 'axios';
 import Toast from 'react-native-root-toast';
 import DatePicker from 'react-native-datepicker'
-
+import moment from 'moment'
+import AsyncStorage from '@react-native-community/async-storage';
 class DetailTask extends Component {
   state = {
     name: '',
@@ -15,7 +16,7 @@ class DetailTask extends Component {
     type_id: 0,
     priority_id: 0,
     status_id: 0,
-    deadline: new Date(),
+    deadline: moment().format('YYYY-MM-DD'),
     url: URL,
     token: '',
     task_id: 0,
@@ -24,6 +25,7 @@ class DetailTask extends Component {
     data_type:[],
     data_priority:[],
     data_status:[],
+    pr_id: 0
 
   }
 
@@ -34,15 +36,27 @@ class DetailTask extends Component {
     if (urldebug) {
       this.setState({url : urldebug})
     }
-
+    let pr_id = await AsyncStorage.getItem('pr_id');
+    this.setState({pr_id})
     let task_id = this.props.navigation.getParam('task_id');
     this.setState({task_id})
 
     // get task by id
     await Axios.get(this.state.url + "/task/" + this.state.task_id)
     .then(res => {
+      let data =  res.data.data[0]
+      // let date = data.deadline.toString()
       this.setState({
-        task_id: res.data.data
+        task_id: data.task_id,
+        name: data.title,
+        description: data.task_desc,
+        request_by: data.req_by,
+        owned_by: data.owned_by,
+        label_id: data.label_id,
+        type_id: data.type_id,
+        priority_id: data.priority_id,
+        status_id: data.status_id,
+        deadline:  moment(data.deadline).format('YYYY-MM-DD')
       })
     })
 
@@ -87,7 +101,7 @@ class DetailTask extends Component {
     })
   }
 
-  insertTask = async () => {
+  updateTask = async () => {
     let name = this.state.name || ''
     let description = this.state.description || ''
     let request_by = this.state.request_by || 0
@@ -108,14 +122,16 @@ class DetailTask extends Component {
     msg = name == '' ? 'Task Name is Requered' : msg
 
     if(msg !== '') {
-      Toast.show( msg, {
-        duration: Toast.durations.LONG,
-        position: 0,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-        delay: 0,})
+      // return Toast.show( msg, {
+      //   duration: Toast.durations.LONG,
+      //   position: 0,
+      //   shadow: true,
+      //   animation: true,
+      //   hideOnPress: true,
+      //   delay: 0,})
+      return Alert.alert("Warning", msg)
     } else {
+      // let dateP = this.state.deadline.toString()
       let data = {
         title : name,
         task_desc : description,
@@ -128,9 +144,9 @@ class DetailTask extends Component {
         deadline : this.state.deadline
       }
        // insert task
-      await Axios.post(this.state.url + "/task", data, {headers : {Authorization : this.state.token}})
+      await Axios.put(this.state.url + "/task/" + this.state.task_id, data, {headers : {Authorization : this.state.token}})
       .then(res => {
-        msg = "success insert data task"
+        msg = "success update data task"
         Toast.show( msg, {
           duration: Toast.durations.LONG,
           position: 0,
@@ -138,10 +154,11 @@ class DetailTask extends Component {
           animation: true,
           hideOnPress: true,
           delay: 0,})
+          Alert.alert("Success", msg);
         this.props.navigation.goBack()
       })
       .catch(err => {
-        msg = "Failed insert data task"
+        msg = "failed update data task"
         Toast.show( msg, {
           duration: Toast.durations.LONG,
           position: 0,
@@ -149,9 +166,44 @@ class DetailTask extends Component {
           animation: true,
           hideOnPress: true,
           delay: 0,})
+          Alert.alert("Failed", msg);
       })
     }
 
+  }
+
+  handleDelete= async () => {
+    Alert.alert('Warning', 'Do want to delete this Task',
+      [
+        {text: 'YES', onPress: () => this.deleteTask()},
+        {text: 'NO'}
+      ],
+      {cancelable: false},)
+  }
+
+  deleteTask = async () => {
+    await Axios.delete(`${this.state.url}/task/${this.state.task_id}`, {headers : {Authorization : this.state.token}})
+    .then(res => {
+      Toast.show('success delete task', {
+        duration: Toast.durations.LONG,
+        position: 0,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,})
+        Alert.alert("Success", 'success delete task');
+        return this.props.navigation.goBack()
+    })
+    .catch(err => {
+      Toast.show('failed delete task', {
+        duration: Toast.durations.LONG,
+        position: 0,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,})
+        Alert.alert("Failed", 'Failed delete task');
+    })
   }
 
   
@@ -160,21 +212,25 @@ class DetailTask extends Component {
     return(
       <ScrollView>
       <SafeAreaView style={styles.container}>
-          <KeyboardAvoidingView behavior="padding" enabled style={styles.form}>
+          <View behavior="padding" enabled style={styles.form}>
             <Text style={styles.formText}>Task Name</Text>
             <TextInput
               style={styles.formInput}
               underlineColorAndroid='rgba(0,0,0,0)'
               placeholder="Enter Task Name"
               placeholderTextColor = "#AEAEAE"
+              value={this.state.name}
               onChangeText={(name) => this.setState({name})}
               />
             <Text style={styles.formText}>Description</Text>
             <TextInput
+              numberOfLines={1}
+              multiline
               style={styles.formInput}
               underlineColorAndroid='rgba(0,0,0,0)'
               placeholder="Enter Description of Task"
               placeholderTextColor = "#AEAEAE"
+              value={this.state.description}
               onChangeText={(description) => this.setState({description})}
               />
             <Text style={styles.formText}>Request By</Text>
@@ -185,6 +241,7 @@ class DetailTask extends Component {
                 onValueChange={(value) => {
                   this.setState({request_by: value})
                 }}
+                enabled={false}
               >
                 <Picker.Item value="select" label="Select Requester" key={0}/>
                 {
@@ -292,26 +349,27 @@ class DetailTask extends Component {
                 mode="date"
                 display="spinner"
                 showIcon={false}
+                format="YYYY-MM-DD"
                 TouchableComponent={TouchableOpacity}
-                onDateChange={(date) => this.setState({deadline : date})}
+                onDateChange={(date) => {this.setState({deadline : date})}}
               />
             </View>
            
             <View style={styles.buttons}>
               <TouchableOpacity 
                 style={styles.buttonUpdate} 
-                onPress={() => this.insertTask()}
+                onPress={() => this.updateTask()}
                 >
                 <Text style={styles.buttonText}>Update</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={styles.buttonDelete} 
-                onPress={() => this.insertTask()}
+                onPress={() => this.handleDelete()}
                 >
                 <Text style={styles.buttonText}>Delete</Text>
               </TouchableOpacity>
             </View>
-          </KeyboardAvoidingView>
+          </View>
       </SafeAreaView>
       </ScrollView>
     )

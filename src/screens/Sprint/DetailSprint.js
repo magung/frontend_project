@@ -1,9 +1,11 @@
 import React, {Component} from 'react'
-import { ScrollView, FlatList, SafeAreaView, View, Text, TextInput, Picker, AsyncStorage, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Alert, RefreshControlBase} from 'react-native';
+import { ScrollView, FlatList, SafeAreaView, View, Text, TextInput, Picker, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Alert, RefreshControlBase} from 'react-native';
 import {URL} from '../../publics/config'
 import Axios from 'axios';
 import Toast from 'react-native-root-toast';
-
+import DatePicker from 'react-native-datepicker'
+import moment from 'moment';
+import AsyncStorage from '@react-native-community/async-storage';
 class DetailSprint extends Component {
   state = {
     name: '',
@@ -12,7 +14,8 @@ class DetailSprint extends Component {
     token: '',
     sp_id: 0,
     canUpdate : false,
-    canDelete : true
+    canDelete : true,
+    deadline: moment().format('YYYY-MM-DD')
   }
 
   componentDidMount = async () => {
@@ -28,7 +31,8 @@ class DetailSprint extends Component {
     .then(res => {
       this.setState({
         name: res.data.data[0].sp_name,
-        description : res.data.data[0].sp_description
+        description : res.data.data[0].sp_description,
+        deadline : moment(res.data.data[0].deadline).format('YYYY-MM-DD')
       })
     })
 
@@ -58,6 +62,7 @@ class DetailSprint extends Component {
         animation: true,
         hideOnPress: true,
         delay: 0,})
+        Alert.alert("Success", 'success delete sprint');
         return this.props.navigation.navigate("Project")
     })
     .catch(err => {
@@ -68,11 +73,12 @@ class DetailSprint extends Component {
         animation: true,
         hideOnPress: true,
         delay: 0,})
+        Alert.alert("Failed", 'failed delete sprint');
     })
   }
 
 
-  updateSprint = async (name, description) => {
+  updateSprint = async (name, description, deadline) => {
     if(!name){
       Toast.show('name sprint is required', {
             duration: Toast.durations.LONG,
@@ -81,6 +87,7 @@ class DetailSprint extends Component {
             animation: true,
             hideOnPress: true,
             delay: 0,})
+            Alert.alert("Warning", 'name sprint is required');
     }else if(!description){
       Toast.show('description sprint is required', {
             duration: Toast.durations.LONG,
@@ -89,11 +96,13 @@ class DetailSprint extends Component {
             animation: true,
             hideOnPress: true,
             delay: 0,})
+            Alert.alert("Warning", 'description sprint is required');
     } else {
       const token = this.state.token
       let data = {
         sp_name : name,
-        description : description
+        description : description,
+        deadline : deadline
       }
       await Axios.put(`${this.state.url}/sprint/` + this.state.sp_id, data, {headers : {Authorization : token}})
       .then( async result => {
@@ -104,6 +113,7 @@ class DetailSprint extends Component {
           animation: true,
           hideOnPress: true,
           delay: 0,})
+          Alert.alert("Success", 'success update sprint');
         this.props.navigation.goBack()
        
       })
@@ -115,6 +125,7 @@ class DetailSprint extends Component {
           animation: true,
           hideOnPress: true,
           delay: 0,})
+          Alert.alert("Failed", 'Failed update sprint');
       })
     }
   }
@@ -124,7 +135,7 @@ class DetailSprint extends Component {
       <>
       <View style={styles.listMember}>
         <TouchableOpacity 
-          onPress={()=> this.updateSprint(this.state.name, this.state.description)}
+          onPress={()=> this.updateSprint(this.state.name, this.state.description, this.state.deadline)}
           style={styles.buttonCreate} 
           >
           <Text style={styles.buttonText}>Update</Text>
@@ -161,6 +172,8 @@ class DetailSprint extends Component {
               />
             <Text style={styles.formText}>Description</Text>
             <TextInput
+              numberOfLines={1}
+              multiline
               style={styles.formInput}
               underlineColorAndroid='rgba(0,0,0,0)'
               placeholder="enter description sprint"
@@ -168,6 +181,19 @@ class DetailSprint extends Component {
               value = {this.state.description}
               onChangeText={(description) => this.setState({description})}
               />
+            <Text style={styles.formText}>Deadline</Text>
+            <View style={styles.formInput}>
+              <DatePicker
+                style={{marginTop: 10}}
+                date={this.state.deadline}
+                mode="date"
+                display="spinner"
+                showIcon={false}
+                format="YYYY-MM-DD"
+                TouchableComponent={TouchableOpacity}
+                onDateChange={(date) => this.setState({deadline : date})}
+              />
+            </View>
             {this.state.canUpdate ? this.buttonUpDel() : null}
           </KeyboardAvoidingView>
       </SafeAreaView>

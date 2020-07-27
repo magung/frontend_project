@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import Toast from 'react-native-root-toast';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, AsyncStorage, Picker} from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Picker} from 'react-native';
 import Axios from 'axios'
 import {URL} from '../../publics/config';
+import AsyncStorage from '@react-native-community/async-storage';
 class Register extends Component {
   state = {
     name : '',
@@ -60,7 +61,7 @@ class Register extends Component {
         animation: true,
         hideOnPress: true,
         delay: 0,})
-    }else if(position == 0){
+    }else if(position == ""){
       Toast.show('select your position', {
         duration: Toast.durations.LONG,
         position: 0,
@@ -77,7 +78,7 @@ class Register extends Component {
         hideOnPress: true,
         delay: 0,})
     }else if(!currentPassword){
-        Toast.show('enter your password', {
+        Toast.show('enter your current password', {
           duration: Toast.durations.LONG,
           position: 0,
           shadow: true,
@@ -155,6 +156,7 @@ class Register extends Component {
   render() {
     return(
       <View style={styles.containerSignup}>
+        <ScrollView>
         <View style={styles.container} behavior="padding" enabled>
           <Text style={{fontSize: 20, color: '#ffffff', fontWeight: 'bold'}}>REGISTER</Text>
               <View style={styles.Box}>
@@ -197,7 +199,7 @@ class Register extends Component {
                       } 
                     }}
                   >
-                    <Picker.Item value="select" label="Select Position" key={0}/>
+                    <Picker.Item value="" label="Select Position" key={0}/>
                     { this.positionList() }
                   </Picker>
                 </View>
@@ -235,6 +237,7 @@ class Register extends Component {
           <Text style={styles.signupText}>Already have an account? </Text>
           <TouchableOpacity onPress={() => this.props.navigation.navigate('Login')}><Text style={styles.signupButton}>Login</Text></TouchableOpacity>
         </View>
+        </ScrollView>
       </View>
     )
   }
@@ -246,19 +249,21 @@ const styles = StyleSheet.create({
     container : {
         flexGrow: 1,
         justifyContent:'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        backgroundColor:'#1E5028',
     },
     containerSignup : {
         backgroundColor:'#1E5028',
         alignItems:'center',
         justifyContent :'center',
         flex:1,
-        paddingTop: '10%'
+        paddingTop: '10%',
+        height: '100%'
     },
     Box : {
-        marginLeft: 10,
-        marginVertical: 5,
-        height: 80
+      marginHorizontal: "2%",
+      marginVertical: 5,
+      height: 80
     },
     Text: {
         fontSize:20,

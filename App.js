@@ -1,8 +1,8 @@
 import React, {Component} from 'react'
 import { createAppContainer, createSwitchNavigator} from 'react-navigation'
 import { createStackNavigator } from 'react-navigation-stack'
-import { View, Text, AsyncStorage, TouchableOpacity, StyleSheet, Button} from 'react-native';
-
+import { View, Text, TouchableOpacity, StyleSheet, Image} from 'react-native';
+import { createBottomTabNavigator } from 'react-navigation-tabs'
 // screens
 import Project from './src/screens/Menu/Project'
 import NoProject from './src/screens/Menu/NoProject'
@@ -21,9 +21,98 @@ import Sprint from './src/screens/Sprint/Sprint'
 import DebugSetting from './src/screens/Auth/DebugSetting'
 import CreateTask from './src/screens/Task/CreateTask'
 import DetailTask from './src/screens/Task/DetailTask'
+import CreateReport from './src/screens/Report/CreateReport'
+import DetailReport from './src/screens/Report/DetailReport'
+import TeamSprint from './src/screens/Team/Sprint'
+import TeamTask from './src/screens/Team/Task'
+import ImageProfile from './src/screens/Account/ImageProfile'
+const MainNavigator = createBottomTabNavigator(
+  {
+    Project : {
+      screen : Project,
+      navigationOptions : {
+        title : 'Project',
+        tabBarIcon: ({focused}) => (
+            focused ?
+            <View style={styles.icon}><Image source={require('./assets/project01.png')} style={styles.iconImage}/></View>:
+            <View style={styles.icon}><Image source={require('./assets/project02.png')} style={styles.iconImage}/></View>
+        ),
+        tabBarOptions: {
+            activeTintColor: '#1E5028',
+            keyboardHidesTabBar: true,
+            style:{
+              height: 60
+            }
+        },
+        
+
+      }
+    },
+    Report : {
+      screen : Report,
+      navigationOptions : {
+        title : 'Report',
+        tabBarIcon: ({focused}) => (
+            focused ?
+            <View style={styles.icon}><Image source={require('./assets/report01.png')} style={styles.iconImage}/></View>:
+            <View style={styles.icon}><Image source={require('./assets/report02.png')} style={styles.iconImage}/></View>
+        ),
+        tabBarOptions: {
+            activeTintColor: '#1E5028',
+            keyboardHidesTabBar: true,
+            style:{
+              height: 60
+            }
+        }
+      }
+    },
+    Team : {
+      screen : Team,
+      navigationOptions : {
+        title : 'Team',
+        tabBarIcon: ({focused}) => (
+            focused ?
+            <View style={styles.icon}><Image source={require('./assets/team01.png')} style={styles.iconImage}/></View>:
+            <View style={styles.icon}><Image source={require('./assets/team02.png')} style={styles.iconImage}/></View>
+        ),
+        tabBarOptions: {
+            activeTintColor: '#1E5028',
+            keyboardHidesTabBar: true,
+            style:{
+              height: 60
+            }
+        }
+      }
+    },
+    Account : {
+      screen : Account,
+      navigationOptions : {
+        title : 'Account',
+        tabBarIcon: ({focused}) => (
+            focused ?
+            <View style={styles.icon}><Image source={require('./assets/account01.png')} style={styles.iconImage}/></View>:
+            <View style={styles.icon}><Image source={require('./assets/account02.png')} style={styles.iconImage}/></View>
+        ),
+        tabBarOptions: {
+            activeTintColor: '#1E5028',
+            keyboardHidesTabBar: true,
+            style:{
+              height: 60
+            }
+        }
+      }
+    }
+  }
+)
 
 const Menu = createStackNavigator(
   {
+    Main : {
+      screen : MainNavigator,
+      navigationOptions:{
+        header: null,
+      }
+    },
     Project: {
       screen: Project,
       navigationOptions:{
@@ -58,6 +147,20 @@ const Menu = createStackNavigator(
       screen : CreateProject,
       navigationOptions:{
         title: 'Create Project',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+        headerTintColor: '#1E5028',
+        headerStyle: {
+          height: 60, 
+        },
+        headerTitleAlign: 'center'
+      }
+    },
+    ImageProfile: {
+      screen : ImageProfile,
+      navigationOptions:{
+        title: 'Image Profile',
         headerTitleStyle: {
           fontWeight: 'bold',
         },
@@ -163,6 +266,46 @@ const Menu = createStackNavigator(
         },
         headerTitleAlign: 'center'
       }
+    },
+    CreateReport: {
+      screen : CreateReport,
+      navigationOptions:{
+        title: 'Create Report',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+        headerTintColor: '#1E5028',
+        headerStyle: {
+          height: 60, 
+        },
+        headerTitleAlign: 'center'
+      }
+    },
+    DetailReport: {
+      screen : DetailReport,
+      navigationOptions:{
+        title: 'Detail Report',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+        headerTintColor: '#1E5028',
+        headerStyle: {
+          height: 60, 
+        },
+        headerTitleAlign: 'center'
+      }
+    },
+    TeamSprint: {
+      screen : TeamSprint,
+      navigationOptions:{
+        header : null,
+      }
+    },
+    TeamTask: {
+      screen : TeamTask,
+      navigationOptions:{
+        header : null,
+      }
     }
   }
 )
@@ -218,3 +361,18 @@ export default class App extends Component{
     )
   }
 }
+
+
+const styles = StyleSheet.create({
+  icon: {
+    height: 50,
+    padding: 10,
+    alignItems: 'center'
+  },
+  iconImage: {
+      height: 40,
+      width: 40,
+      resizeMode: 'contain'
+  }
+
+});
